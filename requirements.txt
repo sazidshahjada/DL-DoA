@@ -1,0 +1,12 @@
+numpy
+scipy
+pandas
+matplotlib
+seaborn
+scikit-learn
+tqdm
+pyyaml
+jupyter
+ipykernel
+ipywidgets
+iprogress
