@@ -66,8 +66,6 @@ def estimate_doa_music(Rxx, num_sources, sensor_positions, n_snapshots, waveleng
     
     # Vectorized steering vector computation across all scan angles
     A_scan = np.exp(-1j * 2 * np.pi * sensor_positions * np.sin(angles_rad) / wavelength)
-    
-    # denominator = a(theta)^H * En * En^H * a(theta)
     denominator = np.sum(np.abs(En.conj().T @ A_scan)**2, axis=0)
     
     # Prevent division by zero

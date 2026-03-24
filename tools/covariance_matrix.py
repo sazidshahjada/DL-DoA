@@ -253,15 +253,6 @@ if __name__ == "__main__":
         random_seed=42
     )
 
-
-    # Compute covariance matrix with holes for sparse array
-    R = sparse_covariance_matrix(X, virtual_positions, hole_positions, dof)
-    print("Covariance Matrix with Holes (Magnitude):")
-    print(np.round(R, 2))
-
-    plt.figure(figsize=(6, 6))
-    sns.heatmap(np.abs(R), cmap='viridis', annot=True, fmt=".2f")
-    plt.title('Covariance Matrix Magnitude')
-    plt.xlabel('Sensor Index')
-    plt.ylabel('Sensor Index')
-    plt.show()
+    # Generate covariance matrix
+    R_full = sparse_covariance_matrix(X, virtual_positions, hole_positions, dof)
+    print(f"Full covariance matrix shape: {R_full.shape}")

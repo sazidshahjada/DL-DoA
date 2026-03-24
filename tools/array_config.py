@@ -147,7 +147,7 @@ class Coprime_Array:
         plt.scatter(
             self.sensor_positions,
             np.ones_like(self.sensor_positions) * 2,
-            color='blue',
+            color='green',
             s=100,
             label='Sensors'
         )
@@ -158,7 +158,7 @@ class Coprime_Array:
         plt.scatter(
             virtual_positions,
             np.ones_like(virtual_positions),
-            color='red',
+            color='blue',
             s=100,
             label='Virtual Array'
         )
@@ -169,7 +169,7 @@ class Coprime_Array:
         plt.scatter(
             hole_positions,
             np.zeros_like(hole_positions),
-            color='green',
+            color='red',
             s=100,
             label='Holes'
         )
