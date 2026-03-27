@@ -1,0 +1,26 @@
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# VS Code settings
+.vscode/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Environment files
+.env
+venv/
+env/
+
+# Logs
+*.log
+
+# Saved models
+*.pkl
+*.pt
+*.pth
+*.h5
+*.ckpt
