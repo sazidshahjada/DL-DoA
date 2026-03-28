@@ -18,6 +18,9 @@ env/
 # Logs
 *.log
 
+# Data files
+*.npz
+
 # Saved models
 *.pkl
 *.pt

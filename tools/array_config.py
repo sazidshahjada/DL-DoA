@@ -1,3 +1,6 @@
+import sys
+sys.path.insert(0, '/home/sajid/Work/DL-DoA')
+
 import numpy as np
 import matplotlib.pyplot as plt
 from tools.coarray_models import CATARCSModel, GoldenRatioModel
@@ -11,7 +14,7 @@ class Coprime_Array:
     provides utilities for analyzing its coarray properties.
     """
 
-    def __init__(self, M, N, d, model_type='GoldenRatio'):
+    def __init__(self, M, N, d, model_type='CATARCS'):
 
         self.M = M
         self.N = N
@@ -203,20 +206,16 @@ class Coprime_Array:
 
 # Main execution
 if __name__ == "__main__":
+    M = 4
+    N = 5
+    d = 0.5
 
-    M = 3
-    N = 4
-
-
-    print("\n===== GOLDEN RATIO ARRAY =====")
-
-    golden_ratio_array = Coprime_Array(M, N, model_type='GoldenRatio')
-
-    print(f"Sensors: {golden_ratio_array.sensor_positions}")
-    print(f"Number of Sensors: {golden_ratio_array.number_of_sensors}")
-    print(f"Degrees of Freedom: {golden_ratio_array.dof}")
-
-    print(f"Virtual Array: {golden_ratio_array.virtual_array_positions()}")
-    print(f"Hole Positions: {golden_ratio_array.get_hole_positions()}")
-
-    golden_ratio_array.visualize_array()
+    print("=== CATARCS Model ===")
+    catarcs_array = Coprime_Array(M=M, N=N, d=d, model_type='CATARCS')
+    print(f"Sensor Positions: {catarcs_array.sensor_positions}")
+    print(f"Number of Sensors: {catarcs_array.number_of_sensors}")
+    print(f"Degrees of Freedom (DoF): {catarcs_array.dof}")
+    print(f"Virtual Array Positions: {catarcs_array.virtual_positions}")
+    print(f"Hole Positions: {catarcs_array.hole_positions}")  
+    
+    catarcs_array.visualize_array()

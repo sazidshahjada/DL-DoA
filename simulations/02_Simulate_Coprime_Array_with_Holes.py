@@ -12,6 +12,7 @@ from simulators.monte_carlo_simulator import (
     doa_simulation_with_num_sources, 
     doa_simulation_with_snapshots
 )
+from tools.array_config import Coprime_Array
 
 
 def _plot_results(simulation_results, snr_range, title, label_prefix, save_path="results"):
@@ -23,7 +24,6 @@ def _plot_results(simulation_results, snr_range, title, label_prefix, save_path=
         
     plt.figure(figsize=(10, 6))
     
-    # simulation_results is a dict: {param_value: [rmse_at_snr1, rmse_at_snr2, ...]}
     for param_value, rmse_values in simulation_results.items():
         plt.plot(snr_range, rmse_values, marker='o', label=f'{label_prefix}: {param_value}')
     
@@ -39,12 +39,14 @@ def _plot_results(simulation_results, snr_range, title, label_prefix, save_path=
     plt.show()
 
 
-def run_ula_simulations(num_sensors, snr_range, num_sources_list, snapshot_list):
+def run_coprime_simulations(M, N, d, snr_range, num_sources_list, snapshot_list):
     """
-    Configures and runs ULA-specific simulations.
+    Configures and runs Coprime Array-specific simulations.
     """
-    sensor_positions = np.arange(num_sensors) * 0.5
-    print(f"Running ULA Simulation with {num_sensors} sensors.")
+    array = Coprime_Array(M, N, d=d, model_type="CATARCS")
+    sensor_positions = array.virtual_positions
+    num_sensors = array.number_of_sensors
+    print(f"Running Coprime Array Simulation with {num_sensors} sensors.")
 
     # 2. Run Simulation: Performance vs. Number of Sources
     print("\nRun Simulation: Performance vs. Number of Sources")
@@ -74,7 +76,7 @@ def run_ula_simulations(num_sensors, snr_range, num_sources_list, snapshot_list)
     _plot_results(
         results_sources, 
         snr_range, 
-        title=f"ULA DOA RMSE vs. Number of Sources (M={num_sensors})", 
+        title=f"Coprime Array DOA RMSE vs. Number of Sources (M={M}, N={N})", 
         label_prefix="Sources",
         save_path=save_dir
     )
@@ -82,17 +84,22 @@ def run_ula_simulations(num_sensors, snr_range, num_sources_list, snapshot_list)
     _plot_results(
         results_snapshots, 
         snr_range, 
-        title=f"ULA DOA RMSE vs. Number of Snapshots (Sources={target_source_count})", 
+        title=f"Coprime Array DOA RMSE vs. Number of Snapshots (Sources={target_source_count}, M={M}, N={N})", 
         label_prefix="Snapshots",
         save_path=save_dir
     )
 
 
 if __name__ == "__main__":
-    # ULA Configuration
-    NUM_SENSORS = 46           # Total sensors in the ULA
+    # Coprime Array Configuration
+    M = 4
+    N = 5
+    d = 0.5
+
+    # Parameters for simulations
     SNR_VALS = [0, 5, 10, 15, 20]
     SOURCES = [2, 4, 6, 8, 10]
     SNAPSHOTS = [200, 500, 1000, 2000, 5000]
 
-    run_ula_simulations(NUM_SENSORS, SNR_VALS, SOURCES, SNAPSHOTS)
+    # Run the simulations
+    run_coprime_simulations(M, N, d=d, snr_range=SNR_VALS, num_sources_list=SOURCES, snapshot_list=SNAPSHOTS)
