@@ -8,7 +8,7 @@ sns.set_theme(context="paper")
 sns.set_style(style="dark")
 sys.path.insert(0, '/home/sajid/Work/DL-DoA')
 
-from simulators.monte_carlo_simulator import (
+from simulators.coprime_array_monte_carlo_simulator import (
     doa_simulation_with_num_sources, 
     doa_simulation_with_snapshots
 )
@@ -44,14 +44,13 @@ def run_coprime_simulations(M, N, d, snr_range, num_sources_list, snapshot_list)
     Configures and runs Coprime Array-specific simulations.
     """
     array = Coprime_Array(M, N, d=d, model_type="CATARCS")
-    sensor_positions = array.virtual_positions
     num_sensors = array.number_of_sensors
     print(f"Running Coprime Array Simulation with {num_sensors} sensors.")
 
     # 2. Run Simulation: Performance vs. Number of Sources
     print("\nRun Simulation: Performance vs. Number of Sources")
     results_sources = doa_simulation_with_num_sources(
-        sensor_positions=sensor_positions, 
+        array_config=array,
         snr_range=snr_range, 
         num_sources_list=num_sources_list, 
         num_trials=100, 
@@ -63,7 +62,7 @@ def run_coprime_simulations(M, N, d, snr_range, num_sources_list, snapshot_list)
     print("\nRun Simulation: Performance vs. Number of Snapshots")
     target_source_count = 5
     results_snapshots = doa_simulation_with_snapshots(
-        sensor_positions=sensor_positions, 
+        array_config=array,
         snr_range=snr_range, 
         num_sources=target_source_count, 
         snapshot_range=snapshot_list, 
@@ -94,7 +93,7 @@ if __name__ == "__main__":
     # Coprime Array Configuration
     M = 4
     N = 5
-    d = 0.5
+    d = 1
 
     # Parameters for simulations
     SNR_VALS = [0, 5, 10, 15, 20]

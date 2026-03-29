@@ -8,7 +8,7 @@ sns.set_theme(context="paper")
 sns.set_style(style="dark")
 sys.path.insert(0, '/home/sajid/Work/DL-DoA')
 
-from simulators.monte_carlo_simulator import (
+from simulators.ula_monte_carlo_simulator import (
     doa_simulation_with_num_sources, 
     doa_simulation_with_snapshots
 )
