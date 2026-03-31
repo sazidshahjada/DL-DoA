@@ -76,3 +76,51 @@ def estimate_doa_music(Rxx, num_sources, sensor_positions, n_snapshots, waveleng
     estimated_angles = _find_peaks(P_music, scan_angles, num_sources)
     
     return estimated_angles, P_music, scan_angles
+
+
+
+
+def estimate_doa_capon(Rxx, num_sources, sensor_positions, wavelength=1.0, 
+                      scan_angles=np.arange(-90, 90.1, 0.1), diagonal_loading=1e-6):
+    """
+    Capon (MVDR) DOA Estimation.
+    
+    Parameters:
+    -----------
+    Rxx : ndarray
+        Covariance matrix (M x M).
+    num_sources : int
+        Number of signals to find.
+    sensor_positions : array-like
+        Sensor locations (ULA or Sparse).
+    wavelength : float
+        Wavelength of the signal.
+    scan_angles : ndarray
+        The angular range to scan.
+    diagonal_loading : float
+        Regularization factor to ensure Rxx is invertible.
+    """
+    
+    M = Rxx.shape[0]
+    sensor_positions = np.array(sensor_positions).reshape(-1, 1)
+    
+    # 1. Robust Matrix Inversion with Diagonal Loading
+    R_inv = np.linalg.inv(Rxx + diagonal_loading * np.eye(M))
+    
+    # 2. Compute Steering Vectors for all scan angles
+    angles_rad = np.deg2rad(scan_angles)
+    A_scan = np.exp(-1j * 2 * np.pi * sensor_positions * np.sin(angles_rad) / wavelength)
+    
+    # 3. Compute Capon Power Spectrum
+    term1 = R_inv @ A_scan
+    # denominator = sum(conjugate(A_scan) * term1) -> shape (num_scan_angles,)
+    denominator = np.real(np.sum(np.conj(A_scan) * term1, axis=0))
+    
+    # Prevent division by zero
+    denominator[denominator <= 0] = 1e-12
+    P_capon = 1.0 / denominator
+
+    # 4. Peak Finding (using your existing helper)
+    estimated_angles = _find_peaks(P_capon, scan_angles, num_sources)
+    
+    return estimated_angles, P_capon, scan_angles

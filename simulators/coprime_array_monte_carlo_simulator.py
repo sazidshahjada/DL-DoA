@@ -73,7 +73,7 @@ def doa_simulation_with_num_sources(
                     R_obs=R_obs,
                     virtual_indices=virtual_positions,
                     target_n=dof + 1,
-                    max_rank=n_src + 2, # Scale rank dynamically with source count
+                    max_rank=5,
                     max_iter=50,
                     hard_imputation=False
                 )
@@ -150,7 +150,7 @@ def doa_simulation_with_snapshots(
                     R_obs=R_obs,
                     virtual_indices=virtual_positions,
                     target_n=dof + 1,
-                    max_rank=num_sources + 2, 
+                    max_rank=5, 
                     max_iter=50,
                     hard_imputation=False
                 )

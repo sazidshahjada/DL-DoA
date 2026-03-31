@@ -39,7 +39,7 @@ def _plot_results(simulation_results, snr_range, title, label_prefix, save_path=
     plt.show()
 
 
-def run_coprime_simulations(M, N, d, snr_range, num_sources_list, snapshot_list):
+def run_coprime_simulations(M, N, d, snr_range, num_sources_list, snapshot_list, num_trials=100):
     """
     Configures and runs Coprime Array-specific simulations.
     """
@@ -53,7 +53,7 @@ def run_coprime_simulations(M, N, d, snr_range, num_sources_list, snapshot_list)
         array_config=array,
         snr_range=snr_range, 
         num_sources_list=num_sources_list, 
-        num_trials=100, 
+        num_trials=num_trials, 
         n_snapshot=500,
         min_sep=5
     )
@@ -66,7 +66,7 @@ def run_coprime_simulations(M, N, d, snr_range, num_sources_list, snapshot_list)
         snr_range=snr_range, 
         num_sources=target_source_count, 
         snapshot_range=snapshot_list, 
-        num_trials=100,
+        num_trials=num_trials,
         min_sep=5
     )
 
@@ -101,4 +101,8 @@ if __name__ == "__main__":
     SNAPSHOTS = [200, 500, 1000, 2000, 5000]
 
     # Run the simulations
-    run_coprime_simulations(M, N, d=d, snr_range=SNR_VALS, num_sources_list=SOURCES, snapshot_list=SNAPSHOTS)
+    run_coprime_simulations(
+        M, N, d=d, snr_range=SNR_VALS,
+        num_sources_list=SOURCES, snapshot_list=SNAPSHOTS,
+        num_trials=10
+    )

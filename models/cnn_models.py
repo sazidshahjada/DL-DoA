@@ -1,78 +1,70 @@
 import torch
 import torch.nn as nn
 
-class UNetInpainter(nn.Module):
-    def __init__(self, input_channels=2, output_channels=2):
-        super(UNetInpainter, self).__init__()
+class UNetBlock(nn.Module):
+    def __init__(self, in_channels, out_channels):
+        super(UNetBlock, self).__init__()
+        self.conv = nn.Sequential(
+            nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1),
+            nn.BatchNorm2d(out_channels),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1),
+            nn.BatchNorm2d(out_channels),
+            nn.LeakyReLU(0.2, inplace=True)
+        )
 
-        def conv_block(in_ch, out_ch):
-            return nn.Sequential(
-                nn.Conv2d(in_ch, out_ch, kernel_size=3, padding=1),
-                nn.BatchNorm2d(out_ch),
-                nn.ReLU(inplace=True),
-                nn.Conv2d(out_ch, out_ch, kernel_size=3, padding=1),
-                nn.BatchNorm2d(out_ch),
-                nn.ReLU(inplace=True)
-            )
+    def forward(self, x):
+        return self.conv(x)
 
+class ToeplitzUNet(nn.Module):
+    def __init__(self, input_channels=2):
+        super(ToeplitzUNet, self).__init__()
+        
         # Encoder (Downsampling)
-        self.enc1 = conv_block(input_channels, 64)
-        self.pool1 = nn.MaxPool2d(kernel_size=2, stride=2)
+        self.enc1 = UNetBlock(input_channels, 32)
+        self.pool1 = nn.MaxPool2d(2)
         
-        self.enc2 = conv_block(64, 128)
-        self.pool2 = nn.MaxPool2d(kernel_size=2, stride=2)
+        self.enc2 = UNetBlock(32, 64)
+        self.pool2 = nn.MaxPool2d(2)
         
-        self.enc3 = conv_block(128, 256)
-        self.pool3 = nn.MaxPool2d(kernel_size=2, stride=2)
-
         # Bottleneck
-        self.bottleneck = conv_block(256, 512)
-
+        self.bottleneck = UNetBlock(64, 128)
+        
         # Decoder (Upsampling)
-        self.up3 = nn.ConvTranspose2d(512, 256, kernel_size=2, stride=2)
-        self.dec3 = conv_block(512, 256) # 512 because of skip connection
+        self.up2 = nn.ConvTranspose2d(128, 64, kernel_size=2, stride=2)
+        self.dec2 = UNetBlock(128, 64) # 128 because of skip connection
         
-        self.up2 = nn.ConvTranspose2d(256, 128, kernel_size=2, stride=2)
-        self.dec2 = conv_block(256, 128)
+        self.up1 = nn.ConvTranspose2d(64, 32, kernel_size=2, stride=2)
+        self.dec1 = UNetBlock(64, 32) # 64 because of skip connection
         
-        self.up1 = nn.ConvTranspose2d(128, 64, kernel_size=2, stride=2)
-        self.dec1 = conv_block(128, 64)
-
         # Final Output Layer
-        self.final_conv = nn.Conv2d(64, output_channels, kernel_size=1)
+        self.final = nn.Conv2d(32, 2, kernel_size=1)
 
     def forward(self, x):
         # Encoder
         e1 = self.enc1(x)
         e2 = self.enc2(self.pool1(e1))
-        e3 = self.enc3(self.pool2(e2))
         
         # Bottleneck
-        b = self.bottleneck(self.pool3(e3))
+        b = self.bottleneck(self.pool2(e2))
         
         # Decoder with Skip Connections
-        # We use torch.cat to combine the upsampled features with encoder features
-        d3 = self.up3(b)
-        d3 = torch.cat((d3, e3), dim=1)
-        d3 = self.dec3(d3)
-        
-        d2 = self.up2(d3)
-        d2 = torch.cat((d2, e2), dim=1)
+        d2 = self.up2(b)
+        d2 = torch.cat((d2, e2), dim=1) # Concatenate along channel dim
         d2 = self.dec2(d2)
         
         d1 = self.up1(d2)
         d1 = torch.cat((d1, e1), dim=1)
         d1 = self.dec1(d1)
         
-        return self.final_conv(d1)
+        return self.final(d1)
     
-
 
 
 class ResidualBlock(nn.Module):
     def __init__(self, channels):
         super(ResidualBlock, self).__init__()
-        self.conv_seq = nn.Sequential(
+        self.conv_block = nn.Sequential(
             nn.Conv2d(channels, channels, kernel_size=3, padding=1, bias=False),
             nn.BatchNorm2d(channels),
             nn.ReLU(inplace=True),
@@ -82,39 +74,54 @@ class ResidualBlock(nn.Module):
         self.relu = nn.ReLU(inplace=True)
 
     def forward(self, x):
+        # The core "Residual" logic: Identity + learned mapping
         residual = x
-        out = self.conv_seq(x)
-        out += residual  # The skip connection
+        out = self.conv_block(x)
+        out += residual
         return self.relu(out)
 
-class ResNetInpainter(nn.Module):
-    def __init__(self, input_channels=2, num_blocks=8, internal_channels=64):
-        super(ResNetInpainter, self).__init__()
+class ToeplitzResNet(nn.Module):
+    def __init__(self, num_blocks=6, input_channels=2):
+        super(ToeplitzResNet, self).__init__()
         
         # Initial Feature Extraction
-        self.initial_conv = nn.Sequential(
-            nn.Conv2d(input_channels, internal_channels, kernel_size=3, padding=1),
+        self.initial = nn.Sequential(
+            nn.Conv2d(input_channels, 64, kernel_size=3, padding=1),
+            nn.BatchNorm2d(64),
             nn.ReLU(inplace=True)
         )
         
-        # Stack of Residual Blocks
-        self.res_blocks = nn.Sequential(
-            *[ResidualBlock(internal_channels) for _ in range(num_blocks)]
-        )
+        # Series of Residual Blocks (keeping spatial dimensions constant)
+        blocks = []
+        for _ in range(num_blocks):
+            blocks.append(ResidualBlock(64))
+        self.res_blocks = nn.Sequential(*blocks)
         
-        # Final Reconstruction Layer
-        self.final_conv = nn.Sequential(
-            nn.Conv2d(internal_channels, internal_channels // 2, kernel_size=3, padding=1),
+        # Final Reconstruction Layers
+        self.reconstruct = nn.Sequential(
+            nn.Conv2d(64, 32, kernel_size=3, padding=1),
+            nn.BatchNorm2d(32),
             nn.ReLU(inplace=True),
-            nn.Conv2d(internal_channels // 2, 2, kernel_size=3, padding=1)
+            nn.Conv2d(32, 2, kernel_size=1) # Mapping back to [Real, Imag]
         )
 
     def forward(self, x):
-        # x shape: [Batch, 2, L, L]
-        out = self.initial_conv(x)
-        out = self.res_blocks(out)
-        out = self.final_conv(out)
+        # Store input for a global skip connection (Optional but powerful)
+        identity = x 
         
-        # Global Residual Learning: 
-        # Adding the input back ensures we keep the measured sensor data intact
-        return out + x
+        out = self.initial(x)
+        out = self.res_blocks(out)
+        out = self.reconstruct(out)
+        
+        # Final output is the input + learned adjustment
+        return out + identity
+    
+
+
+# Quick Test
+if __name__ == "__main__":
+    model = ToeplitzUNet()
+    sample_input = torch.randn(8, 2, 16, 16) # Batch size 8
+    output = model(sample_input)
+    print(f"Input Shape: {sample_input.shape}")
+    print(f"Output Shape: {output.shape}") # Should be (8, 2, 16, 16)
