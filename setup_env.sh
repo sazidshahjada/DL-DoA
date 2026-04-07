@@ -17,7 +17,7 @@ pip install -r requirements.txt
 if [[ "$(uname -s)" == "Linux" ]]; then
     if command -v nvidia-smi &> /dev/null; then
         echo "NVIDIA GPU detected. Installing PyTorch with CUDA support..."
-        pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+        pip3 install torch torchvision --index-url https://download.pytorch.org/whl/cu126
     else
         echo "No NVIDIA GPU detected. Installing CPU-only version of PyTorch..."
         pip install torch torchvision torchaudio

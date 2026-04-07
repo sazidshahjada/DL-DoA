@@ -1,5 +1,6 @@
 import sys
-sys.path.insert(0, '/home/sajid/Work/DL-DoA')
+
+sys.path.insert(0, '/home/iot/Sajid/Repositories/DL-DoA')
 
 import os
 import numpy as np
@@ -10,6 +11,7 @@ from tools.covariance_matrix import array_signal_model, covariance_matrix, spars
 
 
 def generate_data(array_config: Coprime_Array, sample_count: int, save_path: str):
+    print(f"Array Configuration: M={array_config.M}, N={array_config.N}, d={array_config.d}, DOF={array_config.dof}")
     for i in tqdm(range(sample_count), desc="Generating Data Samples"):
         n = np.random.randint(1, 15)
         angles = np.arange(-90, 90, 1)
@@ -63,13 +65,13 @@ def generate_data(array_config: Coprime_Array, sample_count: int, save_path: str
 
 
 if __name__ == "__main__":
-    M = 4
-    N = 5
+    M = 6
+    N = 7
     d = 1
     array_config = Coprime_Array(M=M, N=N, d=d)
     sample_count = 100000
     dof = array_config.dof
-    save_path = f"CATARACS_M{M}_N{N}_DOF{dof}"
+    save_path = f"data/CATARACS_M{M}_N{N}_DOF{dof}"
 
     generate_data(array_config, sample_count, save_path)
     print(f"Data generation complete. Samples saved to: {save_path}")
